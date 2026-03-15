@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TradeBaseAI — Client Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #EA580C;
+      --orange-light: #FFF0E6;
+      --blue-light: #EBF3FF;
+      --green-light: #EDFAF4;
+      --bg: #ffffff;
+      --bg-secondary: #f7f7f5;
+      --bg-tertiary: #f0ede8;
+      --text-primary: #1a1a1a;
+      --text-secondary: #555;
+      --text-tertiary: #999;
+      --border: rgba(0,0,0,0.1);
+      --border-secondary: rgba(0,0,0,0.18);
+      --success: #16a34a;
+      --success-bg: #f0faf4;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111;
+        --bg-secondary: #1a1a1a;
+        --bg-tertiary: #222;
+        --text-primary: #f0f0f0;
+        --text-secondary: #aaa;
+        --text-tertiary: #666;
+        --border: rgba(255,255,255,0.1);
+        --border-secondary: rgba(255,255,255,0.18);
+        --success: #4ade80;
+        --success-bg: #0f2a1a;
+        --orange-light: #2a1500;
+        --blue-light: #0d1e33;
+        --green-light: #0a1f15;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    /* Ticker */
+    .ticker {
+      background: var(--orange);
+      overflow: hidden;
+      height: 28px;
+      display: flex;
+      align-items: center;
+    }
+    .ticker-inner {
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #fff;
+      white-space: nowrap;
+      display: inline-block;
+      animation: scroll 30s linear infinite;
+    }
+    @keyframes scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* Header */
+    .header {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 32px;
+    }
+    .logo-row { display: flex; align-items: center; gap: 12px; }
+    .logo-mark {
+      width: 34px; height: 34px;
+      background: var(--orange);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Courier New', monospace;
+      font-size: 12px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .brand-name { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .brand-sub { font-family: 'Courier New', monospace; font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.1em; margin-top: 1px; }
+    .clock { font-family: 'Courier New', monospace; font-size: 18px; font-weight: 700; color: var(--orange); text-align: right; }
+    .clock-date { font-family: 'Courier New', monospace; font-size: 10px; color: var(--text-tertiary); text-align: right; margin-top: 2px; }
+
+    /* Body */
+    .body { max-width: 1100px; margin: 0 auto; padding: 36px 24px; }
+    .page-label { font-family: 'Courier New', monospace; font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.18em; margin-bottom: 8px; }
+    .page-title { font-size: 28px; font-weight: 700; color: var(--text-primary); line-height: 1.25; margin-bottom: 6px; }
+    .page-sub { font-size: 14px; color: var(--text-secondary); margin-bottom: 32px; }
+
+    /* Cards */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { border-color: var(--border-secondary); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+    .card-icon {
+      width: 38px; height: 38px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .card-name { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+    .card-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+    .status-badge {
+      display: flex; align-items: center; gap: 5px;
+      font-family: 'Courier New', monospace; font-size: 9px;
+      letter-spacing: 0.1em; padding: 3px 8px;
+      border-radius: 20px; white-space: nowrap;
+    }
+    .status-live { background: var(--success-bg); color: var(--success); }
+    .status-pending { background: var(--bg-secondary); color: var(--text-tertiary); }
+    .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .dot-live { background: var(--success); animation: pulse 2s infinite; }
+    .dot-pending { background: var(--text-tertiary); }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    .stat-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px; margin: 14px 0;
+    }
+    .stat-label { font-family: 'Courier New', monospace; font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.08em; margin-bottom: 4px; }
+    .stat-value { font-size: 24px; font-weight: 700; margin-bottom: 2px; }
+    .stat-sub { font-size: 11px; color: var(--text-tertiary); }
+
+    .features { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
+    .feature { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary); }
+    .feat-dash { width: 12px; height: 1.5px; flex-shrink: 0; border-radius: 2px; }
+
+    .cta-btn {
+      width: 100%; padding: 10px;
+      border-radius: var(--radius-md);
+      font-family: 'Courier New', monospace; font-size: 10px;
+      letter-spacing: 0.12em; cursor: pointer;
+      border: 1px solid var(--border-secondary);
+      background: transparent; color: var(--text-secondary);
+      transition: background 0.15s, color 0.15s;
+    }
+    .cta-btn:hover { background: var(--bg-secondary); }
+    .cta-btn.active { border-color: var(--orange); color: var(--orange); }
+    .cta-btn.active:hover { background: var(--orange-light); }
+
+    /* Infra */
+    .infra {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+    }
+    .infra-label { font-family: 'Courier New', monospace; font-size: 10px; color: var(--text-tertiary); letter-spacing: 0.15em; margin-bottom: 12px; }
+    .infra-items { display: flex; flex-wrap: wrap; gap: 20px; }
+    .infra-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+
+    /* Footer */
+    .footer {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 20px; padding-top: 16px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap; gap: 8px;
+    }
+    .footer-text { font-family: 'Courier New', monospace; font-size: 10px; color: var(--text-tertiary); }
+  </style>
+</head>
+<body>
+
+  <div class="ticker">
+    <span class="ticker-inner">AI RECEPTIONIST — ALWAYS ON &nbsp;&nbsp;//&nbsp;&nbsp; TRADEBASEAI — BUILT FOR TRADES &nbsp;&nbsp;//&nbsp;&nbsp; HVAC · PLUMBING · ELECTRICAL · ROOFING &nbsp;&nbsp;//&nbsp;&nbsp; AUTOMATE. GROW. DOMINATE. &nbsp;&nbsp;//&nbsp;&nbsp; AI RECEPTIONIST — ALWAYS ON &nbsp;&nbsp;//&nbsp;&nbsp; TRADEBASEAI — BUILT FOR TRADES &nbsp;&nbsp;//&nbsp;&nbsp; HVAC · PLUMBING · ELECTRICAL · ROOFING &nbsp;&nbsp;//&nbsp;&nbsp; AUTOMATE. GROW. DOMINATE. &nbsp;&nbsp;//&nbsp;&nbsp;</span>
+  </div>
+
+  <div class="header">
+    <div class="logo-row">
+      <div class="logo-mark">TB</div>
+      <div>
+        <div class="brand-name">TradeBaseAI</div>
+        <div class="brand-sub">CLIENT DASHBOARD · v1.0</div>
+      </div>
+    </div>
+    <div>
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="clock-date" id="clock-date">---</div>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="page-label">AUTOMATION CONTROL CENTER</div>
+    <div class="page-title">Your AI systems,<br>all in one place.</div>
+    <div class="page-sub">Connect your services below to unlock live performance data.</div>
+
+    <div class="cards">
+
+      <!-- AI Receptionist -->
+      <div class="card">
+        <div class="card-top">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="card-icon" style="background:var(--orange-light);">📞</div>
+            <div>
+              <div class="card-name">AI Receptionist</div>
+              <div class="card-desc">24/7 call answering & lead capture</div>
+            </div>
+          </div>
+          <div class="status-badge status-live">
+            <span class="dot dot-live"></span>LIVE
+          </div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">CALLS HANDLED</div>
+          <div class="stat-value" style="color:var(--orange);">—</div>
+          <div class="stat-sub">Connect Twilio to view live data</div>
+        </div>
+        <div class="features">
+          <div class="feature"><span class="feat-dash" style="background:var(--orange);"></span>Live call transcription</div>
+          <div class="feature"><span class="feat-dash" style="background:var(--orange);"></span>Lead qualification</div>
+          <div class="feature"><span class="feat-dash" style="background:var(--orange);"></span>SMS follow-up</div>
+        </div>
+        <button class="cta-btn active">VIEW ANALYTICS →</button>
+      </div>
+
+      <!-- Sales Follow-Up -->
+      <div class="card">
+        <div class="card-top">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="card-icon" style="background:var(--blue-light);">🔁</div>
+            <div>
+              <div class="card-name">Sales Follow-Up</div>
+              <div class="card-desc">Automated sequences that close more jobs</div>
+            </div>
+          </div>
+          <div class="status-badge status-pending">
+            <span class="dot dot-pending"></span>NOT CONNECTED
+          </div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">FOLLOW-UPS SENT</div>
+          <div class="stat-value" style="color:var(--text-tertiary);">—</div>
+          <div class="stat-sub">Connect to view live data</div>
+        </div>
+        <div class="features">
+          <div class="feature"><span class="feat-dash" style="background:#3B82F6;"></span>Multi-step SMS/email</div>
+          <div class="feature"><span class="feat-dash" style="background:#3B82F6;"></span>No-show re-engagement</div>
+          <div class="feature"><span class="feat-dash" style="background:#3B82F6;"></span>Quote reminders</div>
+        </div>
+        <button class="cta-btn">CONNECT SERVICE →</button>
+      </div>
+
+      <!-- Workflow Automation -->
+      <div class="card">
+        <div class="card-top">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="card-icon" style="background:var(--green-light);">⚙️</div>
+            <div>
+              <div class="card-name">Workflow Automation</div>
+              <div class="card-desc">Job management, scheduling & dispatch</div>
+            </div>
+          </div>
+          <div class="status-badge status-pending">
+            <span class="dot dot-pending"></span>NOT CONNECTED
+          </div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">JOBS AUTOMATED</div>
+          <div class="stat-value" style="color:var(--text-tertiary);">—</div>
+          <div class="stat-sub">Connect to view live data</div>
+        </div>
+        <div class="features">
+          <div class="feature"><span class="feat-dash" style="background:#10B981;"></span>Calendar sync</div>
+          <div class="feature"><span class="feat-dash" style="background:#10B981;"></span>Tech dispatch</div>
+          <div class="feature"><span class="feat-dash" style="background:#10B981;"></span>Invoice triggers</div>
+        </div>
+        <button class="cta-btn">CONNECT SERVICE →</button>
+      </div>
+
+    </div>
+
+    <div class="infra">
+      <div class="infra-label">INFRASTRUCTURE STATUS</div>
+      <div class="infra-items">
+        <div class="infra-item"><span class="dot" style="background:var(--success);"></span>n8n Cloud</div>
+        <div class="infra-item"><span class="dot" style="background:var(--success);"></span>Twilio</div>
+        <div class="infra-item"><span class="dot" style="background:var(--success);"></span>Airtable</div>
+        <div class="infra-item"><span class="dot" style="background:var(--success);"></span>Claude API</div>
+        <div class="infra-item"><span class="dot" style="background:var(--success);"></span>Google Calendar</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span class="footer-text">© 2026 TradeBaseAI — Mychail Solar Energy LLC</span>
+      <span class="footer-text">Built for trades. Powered by AI.</span>
+    </div>
+  </div>
+
+  <script>
+    function tick() {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+      document.getElementById('clock-date').textContent = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
+    }
+    tick();
+    setInterval(tick, 1000);
+  </script>
+
+</body>
+</html>
